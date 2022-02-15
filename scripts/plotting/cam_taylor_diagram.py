@@ -351,6 +351,13 @@ def weighted_correlation(x, y, weights):
     cov_yy = (dev_y * dev_y).weighted(weights).mean()
     return cov_xy / np.sqrt(cov_xx * cov_yy)
 
+def weighted_std(x, weights):
+    mean_x = x.weighted(weights).mean()
+    dev_x = x - mean_x
+    swdev = (weights * dev_x**2).sum()
+    number_nonzero_weights = np.count_nonzero(weights)
+    sum_wgt = weights.sum() * ((number_nonzero_weights - 1)/number_nonzero_weights)
+    return np.sqrt(swdev / sum_wgt)
 
 def taylor_stats_single(casedata, refdata, w=True):
     """This replicates the basic functionality of 'taylor_stats' from NCL.
@@ -369,8 +376,8 @@ def taylor_stats_single(casedata, refdata, w=True):
     else:
         wgt = np.ones(len(lat))
     correlation = weighted_correlation(casedata, refdata, wgt).item()
-    a_sigma = casedata.weighted(wgt).std().item()
-    b_sigma = refdata.weighted(wgt).std().item()
+    a_sigma = weighted_std(casedata,wgt).item()
+    b_sigma = weighted_std(refdata,wgt).item()
     mean_case = casedata.weighted(wgt).mean()
     mean_ref = refdata.weighted(wgt).mean()
     bias = (100*((mean_case - mean_ref)/mean_ref)).item()
